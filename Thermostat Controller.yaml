@@ -163,7 +163,7 @@ display:
           it.strftime(190, 31, id(sszh30), id(my_chocolate), "%S", id(${esptime}).now());
           auto wks = id(${esptime}).now().day_of_week;
           const char* days[] = {"日", "一", "二", "三", "四", "五", "六"};
-          it.print(198, 25, id(yaheb24), TextAlign::BASELINE_LEFT, days[wks-1]);
+          it.print(200, 25, id(yaheb24), TextAlign::BASELINE_LEFT, days[wks-1]);
 
           it.printf(0, 60, id(sszh30), id(my_white), "C: %.1f°C", id(temperature_sensor).state);
           it.printf(0, 92, id(sszh30), id(my_white), "T: %.1f°C", id(climate11).target_temperature);
