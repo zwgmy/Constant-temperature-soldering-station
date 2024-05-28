@@ -352,7 +352,7 @@ sensor:
       then:
         - lambda: |-
             if (id(setting_mode)) {
-              auto temp = id(climate11).target_temperature + 0.5;
+              auto temp = id(climate11).target_temperature + 1;
               if (temp <= id(climate11).get_traits().get_visual_max_temperature()) {
                 id(climate11).target_temperature = temp;
               } 
@@ -361,7 +361,7 @@ sensor:
       then:
         - lambda: |-
             if (id(setting_mode)) {
-              auto temp = id(climate11).target_temperature - 0.5;
+              auto temp = id(climate11).target_temperature - 1;
               if (temp >= id(climate11).get_traits().get_visual_min_temperature()) {
                 id(climate11).target_temperature = temp;
               }
