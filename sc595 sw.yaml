@@ -1,0 +1,862 @@
+substitutions:
+#ADC define 
+  adc0pin: GPIO0
+  update0_time: 60s
+
+  pirpin: GPIO1
+
+  spiclkpin: GPIO2
+  spimosipin: GPIO3
+
+  i2csdapin: GPIO4
+  i2csclpin: GPIO5
+
+  wsbusypin: GPIO6
+
+  dallaspin: GPIO8
+  dallas_utime: 60s
+  
+  swpin: GPIO11
+  bellpin: GPIO12
+  irtpin: GPIO13
+
+  #max7219cspin: GPIO18
+
+  spidcpin: GPIO10
+  st7789cspin: GPIO12
+  #GPIO19
+  st7789rstpin: GPIO11
+  st7789blcpin: GPIO11
+
+  eink_full_update_t: '180'
+  bh1750_updatetime: 5s
+  bmp280_updatetime: 10s
+  aht25_updatetime: 60s
+
+  esptime: sntp_time
+  colorline: color_line
+
+esphome:
+  name: esp32c3ch340-2-2
+  friendly_name: esp32c3ch340-2-2
+  platformio_options:
+#    board_upload.flash_size: 16MB
+    board_build.flash_mode: dio
+    board_build.flash_size: 4MB
+    board_build.mcu: esp32c3
+
+  on_boot:
+    - then:
+      - light.turn_on:
+          id: light_1
+          brightness: 85%
+      priority: -100.0
+
+esp32:
+  board: airm2m_core_esp32c3
+  variant: ESP32C3 
+  framework:
+    type: arduino
+#    type: esp-idf
+  # currently needed, but not in the future
+#    version: latest
+#    platform_version: 6.3.2
+
+# Enable logging
+logger:
+ level: error
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "yvDcik7cTJ+f84UxSO70HHwcngjdc7FQ1cJK/sbZC3g="
+#  reboot_timeout: 0s    
+
+ota:
+  password: "4208007637bde6a36895eab76ccf84d1"
+
+network:
+  enable_ipv6: true
+  min_ipv6_addr_count: 2
+wifi:
+***
+#  manual_ip:
+#    static_ip: 192.168.50.103
+#    gateway: 192.168.50.1
+#    subnet: 255.255.255.0
+#  manual_ip:
+#   static_ip: 192.168.2.82
+#   gateway: 192.168.2.1
+#   subnet: 255.255.255.0
+#   dns1: 223.5.5.5
+#  fast_connect: true
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+#  reboot_timeout: 0s   
+  ap:
+    ssid: "Esp32C3Ch340-2-2"
+    password: "12345678"
+ 
+
+captive_portal:
+
+spi:
+  clk_pin: GPIO2
+  mosi_pin: GPIO3
+  miso_pin: GPIO10
+  id: spi_bus1
+
+  interface: hardware
+
+i2c:
+  sda: ${i2csdapin}
+  scl: ${i2csclpin}
+  scan: True
+  id: bus_a
+  frequency: 100k
+
+display:
+  - platform: st7789v
+    model: Custom
+    height: 240
+    width: 240
+    offset_height: 0
+    offset_width: 0
+    rotation: 90
+#    eightbitcolor: true
+    update_interval: 500ms
+    id: st7789vd
+    cs_pin: GPIO7
+#      sn74hc595: sn74hc595_hub
+#      number: 1
+#      inverted: false
+    dc_pin: GPIO6
+#      sn74hc595: sn74hc595_hub
+#      number: 1
+
+    reset_pin: GPIO8
+  
+#    backlight_pin: ${st7789blcpin}
+    pages:
+      - id: page1
+        lambda: |-
+          //auto red = Color(255, 0, 0);
+          //auto green = Color(0, 255, 0);
+          //auto blue = Color(0, 0, 255);
+          auto orange = Color(255, 99, 71);
+
+          //it.line(0, 0, 240, 0, id(my_chocolate));
+          it.printf(0, 15, id(sszh24), id(my_green), TextAlign::CENTER_LEFT, "温度: %.1f°C", id(intemp).state);
+          // draw a line from [x=0,y=0] to [x=50,y=50]
+          it.line(0, 30, 240, 30, id(my_chocolate));
+
+          // Draw the outline of a rectangle with the top left at [25,40], a width of 30 and a height of 42, color blue
+          //it.rectangle(180, 1, 42, 30, id(my_blue));
+          // Draw the same rectangle, but this time filled.
+          //it.filled_rectangle(182, 3, 38, 26, id(my_gray));
+
+          it.printf(0, 175, id(sszh65), id(my_white), "%.1f°C", id(max6675k).state);
+
+          it.strftime(0, 35, id(sszh65), id(my_ot), "%H", id(${esptime}).now());
+          it.strftime(95, 35, id(sszh65), orange, "%M", id(${esptime}).now());
+          it.strftime(190, 66, id(sszh30), id(my_chocolate), "%S", id(${esptime}).now());
+
+          it.strftime(120, (140 / 3) * 3 - 15, id(yahe30), id(my_gray), TextAlign::CENTER, "%Y-%m-%d", id(${esptime}).now());
+
+          auto wks = id(${esptime}).now().day_of_week;
+          switch(wks){
+          case 1:
+            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "日");
+            break;
+          case 2:
+            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "一");
+            break;
+          case 3:
+            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "二");
+            break;
+          case 4:
+            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "三");
+            break;
+          case 5:
+            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "四");
+            break;
+          case 6:
+            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "五");
+            break;
+          case 7:
+            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "六");
+            break;
+          default:
+            break;
+            }
+
+
+          //it.printf(0, 0, id(yahe16), "室温: %.1f°C", id(ds18b20c3).state);
+          //it.printf(0, 0, id(yahe16), "室温: %.1f°C  AT:%.1f°C  AH:%.1f%%", id(ds18b20c3).state, id(aht25_temperature).state, id(aht25_humidity).state);
+          //it.printf(200, 0, id(yahe16), "AH:%.1f%%", id(aht25_humidity).state);
+
+          //it.strftime(3, 0, id(arial115), TextAlign::TOP_LEFT, "%H:%M", id(${esptime}).now());
+          //it.strftime(0, 18, id(sszh96), TextAlign::TOP_LEFT, "%H:%M", id(${esptime}).now());
+          
+
+          //it.printf(0, 110, id(yahe16), "%.2fv  %.0flx  BP:%.1fh", id(v1).state, id(bh17502).state, id(bmp280_p).state);
+
+          //it.printf(80, 110, id(yahe16), "%.0flx", id(bh17502).state);
+          //it.printf(135, 110, id(yahe16), "BP:%.1fh", id(bmp280_p).state);
+
+
+          //it.strftime((240 / 2), (140 / 3) * 3 + 5, id(yahe30), id(my_gray), TextAlign::CENTER, "%Y-%m-%d", id(${esptime}).now());
+          //it.strftime((240 / 2), (140 / 3) * 2 + 5, id(yahe60), id(my_white), TextAlign::CENTER, "%H:%M:%S", id(${esptime}).now());
+          //it.printf(0, 200, id(yahe16), "Menu Item 1: %s", id(menu_item1).state ? "ON" : "OFF");
+          //it.printf(0, 220, id(yahe16), "Menu Item 2: %s", id(menu_item2).state ? "ON" : "OFF");
+          //it.print(0, 200, id(yahe16), id(my_red), "Hello World!1234");
+          //it.image(0, 0, id(my_image1));
+
+          //it.image(0, 0, id(my_image2));
+
+      - id: page2
+        lambda: |-
+          it.print(0, 30, id(yahe30), id(my_green), "试温度yaherld!123467");
+          //it.print(0, 70, id(arial50), id(my_green), "试温度arial0rld!123467");          
+          it.print(0, 0, id(yahe24), "My menu is not currently active");
+          //it.print(0, 70, id(yahe24), id(my_green), "试温度yaherld!123467"); 
+          //it.print(0, 140, id(yahe50), id(my_green), "试温度yahe0rld!123467"); 
+
+      - id: page3
+        lambda: |-
+          it.print(0, 30, id(ssjh30), id(my_green), "试温度ssjhrld!123467");
+          it.print(0, 70, id(syht30), id(my_green), "试温度syhtrld!123467");          
+
+          it.print(0, 110, id(sszh30), id(my_green), "试温度sszhrld!123467"); 
+          it.print(0, 150, id(fzht30), id(my_green), "试温度fzhtar!123467"); 
+          it.print(0, 190, id(hy30), id(my_green), "试温度hylight!123467"); 
+#      - id: page6
+#        lambda: |-
+#          it.image(0, 0, id(my_image1));
+
+#      - id: page7
+#        lambda: |-        
+#          //it.image(0, 0, id(my_image2));
+
+#      it.rectangle(0,  0, it.get_width(), it.get_height(), id(my_blue));
+#      it.rectangle(0, 20, it.get_width(), it.get_height(), id(my_blue));
+#      it.rectangle(35, 65, 30, 30, id(my_blue));(x,y,width,height);
+#      it.filled_circle(it.get_width() / 3, it.get_height() / 3, 25);
+#      it.print(5, 3, id(yahe15), id(my_black), TextAlign::TOP_LEFT, "ESPHome");
+#      it.rectangle(0,  0, it.get_width(), it.get_height(), id(my_green));
+#      it.rectangle(0, 20, it.get_width(), it.get_height(), id(my_green));   // header bar
+#      if (id(system_status).state) {
+#        it.print(235, 5, id(yahe12), id(my_green), TextAlign::TOP_RIGHT, "Online");
+#      }
+#      else {
+#        it.print(235, 5, id(yahe12), id(my_red), TextAlign::TOP_RIGHT, "Offline");
+#      }
+
+graphical_display_menu:
+  id: my_graphical_display_menu
+  display: st7789vd
+#  on_redraw:
+#    then:
+#      component.update: st7789vd
+  active: false
+#  root_item_id: page1
+  mode: rotary
+  font: sszh24
+  foreground_color: my_chocolate
+  background_color: my_yellow
+  #on_enter:
+  #  then:
+  #    lambda: 'ESP_LOGI("display_menu", "root enter");'
+ # on_leave:
+ #   then:
+ #     lambda: 'ESP_LOGI("display_menu", "root leave");'
+  items: 
+    
+    - type: menu
+      text: 'HC595-Switch'
+#      on_enter:
+#        then:
+#          lambda: 'ESP_LOGI("display_menu", "enter: %s", it->get_text().c_str());'
+#      on_leave:
+#        then:
+#          lambda: 'ESP_LOGI("display_menu", "leave: %s", it->get_text().c_str());'
+      items: 
+        - type: back
+          text: 'Back'
+
+        - type: switch
+          immediate_edit: true
+          text: 'sw4_595'
+          on_text: 'ON'
+          off_text: 'OFF'
+          switch: sw4_595
+          on_value:
+            then:
+              lambda: 'ESP_LOGI("display_menu", "switch value: %s, %s", it->get_text().c_str(), it->get_value_text().c_str());'
+        - type: switch
+          immediate_edit: true
+          text: 'sw6_595'
+          on_text: 'ON'
+          off_text: 'OFF'
+          switch: sw6_595
+          on_value:
+            then:
+              lambda: 'ESP_LOGI("display_menu", "switch value: %s, %s", it->get_text().c_str(), it->get_value_text().c_str());'
+        - type: back
+          text: 'Back'
+
+    - type: number
+      text: 'My Number2'
+      format: '%.2f'
+      number: my_number2
+      on_enter:
+        then:
+          lambda: 'ESP_LOGI("display_menu", "number enter: %s, %s", it->get_text().c_str(), it->get_value_text().c_str());'
+      on_leave:
+        then:
+          lambda: 'ESP_LOGI("display_menu", "number leave: %s, %s", it->get_text().c_str(), it->get_value_text().c_str());'
+      on_value:
+        then:
+          lambda: 'ESP_LOGI("display_menu", "number value: %s, %s", it->get_text().c_str(), it->get_value_text().c_str());'
+
+    - type: switch
+      immediate_edit: true
+      text: 'sw2_595'
+      on_text: 'ON'
+      off_text: 'OFF'
+      switch: sw2_595
+      on_enter:
+        then:
+          lambda: 'ESP_LOGI("display_menu", "switch enter: %s, %s", it->get_text().c_str(), it->get_value_text().c_str());'
+      on_leave:
+        then:
+          lambda: 'ESP_LOGI("display_menu", "switch leave: %s, %s", it->get_text().c_str(), it->get_value_text().c_str());'
+      on_value:
+        then:
+          lambda: 'ESP_LOGI("display_menu", "switch value: %s, %s", it->get_text().c_str(), it->get_value_text().c_str());'
+  
+#    - type: back
+#      text: 'Back'
+
+    - type: command
+      text: 'Hide'
+      on_value:
+        then:
+          - display_menu.hide: my_graphical_display_menu
+
+number:
+  - platform: template
+    id: my_number
+    optimistic: true
+    min_value: 0.0
+    max_value: 20.0
+    step: 1
+    on_value:
+      then:
+        lambda: 'ESP_LOGI("number", "value: %f", x);'
+
+  - platform: template
+    id: my_number2
+    optimistic: true
+    min_value: 20.0
+    max_value: 36.0
+    step: 1
+    on_value:
+      then:
+        lambda: 'ESP_LOGI("number", "value: %f", x);'
+
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO12
+#      sn74hc165: sn74hc165_hub
+      # Use pin number 1
+#      number: 1
+#      inverted: false
+      mode:
+        input: true
+        pullup: true
+#      inverted: True
+  #  name: my_key
+    id: key_state
+    internal: true
+    filters:
+      - delayed_on: 10ms
+      - delayed_off: 10ms
+    on_press:
+      - if:
+          condition:
+            - display_menu.is_active: my_graphical_display_menu
+          then:
+            - display_menu.enter: my_graphical_display_menu
+          else:
+            - display_menu.show:  my_graphical_display_menu
+            #- display.page.show: page1
+#    on_multi_click:
+#    - timing:
+#        - ON for 40ms to 300ms
+#        - OFF for at least 200ms
+#      then:
+#        - if:
+#            condition:
+#              - display_menu.is_active: my_graphical_display_menu
+#            then:
+#              - display_menu.enter: my_graphical_display_menu
+#              - display_menu.show:  my_graphical_display_menu 
+#            else:
+#              - display.page.show: page1
+#              - display_menu.show:  my_graphical_display_menu  
+
+#    - timing:
+#        - ON for 40ms to 400ms
+#        - OFF for 40ms to 300ms
+#        - ON for 40ms to 400ms
+#        - OFF for at least 200ms
+#      then:
+
+#    - timing:
+#        - ON for at least 800ms
+#      then:
+#        - display_menu.enter: my_graphical_display_menu
+
+#        - if:
+#            condition:
+#              - display_menu.is_active: my_graphical_display_menu
+#            then:
+#              - display_menu.enter: my_graphical_display_menu
+#            else:
+#              - display_menu.show:  my_graphical_display_menu  
+#      - display_menu.enter:      
+#      then:
+#        lambda: |-
+
+#    on_click:
+#      min_length: 50ms
+#      max_length: 200ms
+#      then:
+#        - display.page.show_next: st7789vd
+#        - display.page.show: page1
+#        - component.update: st7789vd
+#    filters:
+    #  - invert:
+#      - delayed_on: 10ms
+#     - delayed_off: 10ms
+
+
+sensor:
+  - platform: max6675
+    name: "max6675"
+    cs_pin: GPIO9
+    id: max6675k
+    update_interval: 1s
+
+
+
+
+  - platform: rotary_encoder
+    name: "Rotary Encoder"
+    pin_a: GPIO1
+    pin_b: GPIO0
+
+#    pin_reset: GPIO12
+    restore_mode: ALWAYS_ZERO
+    filters:
+      debounce: 30ms
+    on_clockwise:
+      - if:
+          condition:
+            display_menu.is_active: my_graphical_display_menu
+          then:
+            - display_menu.down: my_graphical_display_menu
+          else:
+            - display.page.show_next: st7789vd
+ #     - display_menu.down: my_graphical_display_menu
+#      then:
+#        - display.page.show_next: st7789vd
+    on_anticlockwise:
+      - if:
+          condition:
+            display_menu.is_active: my_graphical_display_menu
+          then:
+            - display_menu.up: my_graphical_display_menu
+          else:
+            - display.page.show_previous: st7789vd      
+#      - display_menu.up: my_graphical_display_menu
+#      then:
+#        - display.page.show_previous: st7789vd
+
+  - platform: internal_temperature
+    update_interval: 30s
+    name: "chip Temperature"
+    id: intemp
+
+climate:
+  - platform: thermostat
+    name: "Thermostat Climate Controller"
+    sensor: max6675k
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_action:
+      - switch.turn_on: sw3_595
+    idle_action:
+      - switch.turn_off: sw3_595
+    default_preset: Home
+    preset:
+      - name: Home
+#          lambda: |-
+        default_target_temperature_low: id(my_number2).state
+
+
+
+
+sn74hc595:
+  - id: sn74hc595_hub
+    type: spi
+    spi_id: spi_bus1
+    latch_pin: GPIO18
+#       number: GPIO18
+#       allow_other_uses: true
+    oe_pin: GPIO19
+#       number: GPIO19
+#       allow_other_uses: true    
+#    data_pin: GPIO20 #SER
+#    clock_pin: GPIO21 #SRCLK
+    sr_count: 1
+
+# Individual outputs
+output:
+  - platform: ledc
+    pin: ${st7789blcpin}  
+    id: blcpin
+
+  - platform: gpio
+  #gpio
+    id: out3_595
+#    name: "HC595 Pin3"
+    pin:
+      sn74hc595: sn74hc595_hub
+      # Use pin number 3
+      number: 3
+      inverted: false
+#    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+  #gpio
+    id: out_6675
+#    name: "HC595 Pin3"
+    pin: GPIO13
+#      sn74hc595: sn74hc595_hub
+      # Use pin number 3
+#      number: 3
+#      inverted: false
+#    restore_mode: RESTORE_DEFAULT_OFF
+
+
+switch:
+  - platform: gpio
+    name: "HC595 Pin1"
+    id: sw1_595
+    pin:
+      sn74hc595: sn74hc595_hub
+      # Use pin number 1
+      number: 1
+      inverted: false
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "HC595 Pin2"
+    id: sw2_595    
+    pin:
+      sn74hc595: sn74hc595_hub
+      number: 2
+      inverted: false
+#    restore_mode: RESTORE_DEFAULT_OFF
+      allow_other_uses: true
+
+  - platform: gpio
+    name: HC595 Pin3
+    id: sw3_595
+    pin:
+      sn74hc595: sn74hc595_hub
+      number: 3
+      inverted: false
+
+  - platform: gpio
+    name: HC595 Pin4
+    id: sw4_595    
+    pin:
+      sn74hc595: sn74hc595_hub
+      number: 4
+      inverted: false
+
+  - platform: gpio
+    name: "HC595 Pin5"
+    id: sw5_595    
+    pin:
+      sn74hc595: sn74hc595_hub
+      number: 5
+      inverted: false
+
+  - platform: gpio
+    name: HC595 Pin6
+    id: sw6_595    
+    pin:
+      sn74hc595: sn74hc595_hub
+      number: 6
+      inverted: false
+
+#  - platform: gpio
+#    name: "HC595 Pin7"
+#    id: sw7_595    
+#    pin:
+#      sn74hc595: sn74hc595_hub
+#      number: 7
+#      inverted: false
+
+#  - platform: gpio
+#    name: "HC595 Pin8"
+#    id: sw0_595    
+#    pin:
+#      sn74hc595: sn74hc595_hub
+#      number: 0
+#      inverted: false
+
+
+
+light:
+  - platform: monochromatic
+    output: blcpin
+    name: "Backlight"
+    id: light_1
+    restore_mode: RESTORE_AND_ON
+
+  - platform: status_led
+    name: "Switch state"
+    pin: #GPIO13
+      sn74hc595: sn74hc595_hub
+      number: 2
+      inverted: false
+      allow_other_uses: true
+
+
+
+time:
+  - platform: sntp
+    timezone: Asia/Shanghai
+    servers: 
+      - 0.cn.pool.ntp.org
+      - 1.ntp.aliyun.com
+      - 2.ntp1.aliyun.com
+ 
+    id: sntp_time
+
+
+
+color:
+#100%表示关闭  
+  - id: my_red
+    hex: FF0000
+#    red: 100%
+#    green: 0%
+ #   blue: 0%
+
+  - id: my_yellow
+    hex: FFFF00
+#    red: 100%
+#    green: 100%
+#    blue: 0%
+
+  - id: my_green
+    hex: 008000
+#    red: 0%
+#    green: 100%
+#    blue: 0%
+
+  - id: my_blue
+    hex: 0000FF
+#    red: 0%
+#    green: 0%
+#    blue: 100%
+
+  - id: my_gray
+    red_int: 123
+    green_int: 123
+    blue_int: 123
+
+  - id: my_black
+#    hex: 000000
+    red_int: 0
+    green_int: 0
+    blue_int: 0
+#    red: 0%
+#    green: 0%
+#    blue: 0%
+
+  - id: my_white
+    hex: FFFFFF
+#    red_int: 255
+#    green_int: 255
+#    blue_int: 255
+
+  - id: my_chocolate
+#    hex: D2691E
+    red_int: 210
+    green_int: 105
+    blue_int: 30
+
+
+  - id: my_orange
+#    hex: FF4500
+    red_int: 255
+    green_int: 99
+    blue_int: 71
+
+  - id: my_ot
+#    hex: B22222
+    red_int: 255
+    green_int: 69
+    blue_int: 0
+    
+  - id: color_line
+    hex: B22222
+# FireBrick    
+#    red_int: 255
+#    green_int: 69
+#    blue_int: 0
+
+
+font:
+  - file: 'arial.ttf'
+    id: arial22
+    size: 22
+    glyphs: 试验温度!"%()/+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+#arial不能显示中文
+
+  - file: 'arial.ttf'
+    id: arial50
+    size: 50
+    glyphs: 温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'arial.ttf'
+    id: arial115
+    size: 115
+    glyphs: 元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+
+  - file: 'yahe.ttf'
+    id: yahe16
+    size: 16
+    glyphs: 日一二三四五六温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'yahe.ttf'
+    id: yahe24
+    size: 24
+    glyphs: 试验日一二三四五六温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'yaheb.ttf'
+    id: yaheb16
+    size: 16
+    glyphs: 试验日一二三四五六温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+
+  - file: 'yaheb.ttf'
+    id: yaheb24
+    size: 24
+    glyphs: 日一二三四五六温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+
+  - file: 'yahe.ttf'
+    id: yahe30
+    size: 30
+    glyphs: 日一二三四五六温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'yahe.ttf'
+    id: yahe50
+    size: 50
+    glyphs: 日一二三四五六温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+
+
+
+  - file: 'ssjh.ttf'
+    id: ssjh30
+    size: 30
+    glyphs: 试验温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'syhtNormal.ttf'
+    id: syht30
+    size: 30
+    glyphs: 试验温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'syhtRegular.ttf'
+    id: syht16r
+    size: 16
+    glyphs: 温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'SanJiZhiHeiTi.ttf'
+    id: sszh65
+    size: 65
+    glyphs: 试验温度元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'SanJiZhiHeiTi.ttf'
+    id: sszh30
+    size: 30
+    glyphs: 试验温度元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+
+
+  - file: 'syhtRegular.ttf'
+    id: sszh24
+    size: 24
+    glyphs: 无线开关双键书桌冰箱卧室厕所小夜灯传感器电量缓存网络温湿度!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+
+  - file: 'hy.ttf'
+#    weight: light
+    id: hy30
+    size: 30
+
+    glyphs: 试验温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'fanfzhenht.ttf'
+    id: fzht30
+    size: 30
+    glyphs: 试验温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'arial.ttf'
+    id: arial
+    size: 22
+    glyphs: 温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'arial.ttf'
+    id: arial96
+    size: 96
+    glyphs: 温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+
+  - file: 'yahe.ttf'
+    id: yahe56
+    size: 56
+    glyphs: 电压低!"%/()+,-_.:°012345678
+
+  - file: 'ssjh.ttf'
+    id: ssjh110
+    size: 110
+    glyphs: 温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'syhtNormal.ttf'
+    id: hy
+    size: 16
+    glyphs: 温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'syhtRegular.ttf'
+    id: syht
+    size: 16
+    glyphs: 温度湿时间室内状态元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
+  - file: 'SanJiZhiHeiTi.ttf'
+    id: sszh96
+    size: 96
+    glyphs: 元!"%/()+,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+
