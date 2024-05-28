@@ -160,34 +160,10 @@ display:
           it.strftime(190, 66, id(sszh30), id(my_chocolate), "%S", id(${esptime}).now());
 
           it.strftime(120, (140 / 3) * 3 - 15, id(yahe30), id(my_gray), TextAlign::CENTER, "%Y-%m-%d", id(${esptime}).now());
-
+          
           auto wks = id(${esptime}).now().day_of_week;
-          switch(wks){
-          case 1:
-            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "日");
-            break;
-          case 2:
-            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "一");
-            break;
-          case 3:
-            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "二");
-            break;
-          case 4:
-            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "三");
-            break;
-          case 5:
-            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "四");
-            break;
-          case 6:
-            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "五");
-            break;
-          case 7:
-            it.print(195, 60, id(yaheb24),TextAlign::BASELINE_LEFT, "六");
-            break;
-          default:
-            break;
-            }
-
+          const char* days[] = {"日", "一", "二", "三", "四", "五", "六"};
+          it.print(195, 60, id(yaheb24), TextAlign::BASELINE_LEFT, days[wks-1]);
 
           //it.printf(0, 0, id(yahe16), "室温: %.1f°C", id(ds18b20c3).state);
           //it.printf(0, 0, id(yahe16), "室温: %.1f°C  AT:%.1f°C  AH:%.1f%%", id(ds18b20c3).state, id(aht25_temperature).state, id(aht25_humidity).state);
