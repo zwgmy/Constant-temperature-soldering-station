@@ -8,10 +8,11 @@ i2c:
   scl: GPIO22
   scan: false
 
+# Define sensors for temperature and pressure
 sensor:
   - platform: custom
     lambda: |-
-      static WF183DESensor *wf183de_sensor = new WF183DESensor();
+      auto wf183de_sensor = new WF183DESensor();
       App.register_component(wf183de_sensor);
       return {wf183de_sensor->get_temperature_sensor(), wf183de_sensor->get_pressure_sensor()};
     sensors:
@@ -22,7 +23,8 @@ sensor:
         unit_of_measurement: "kPa"
         accuracy_decimals: 1
 
-# Define the custom sensor class in the lambda function
+# Custom component for the WF183DE sensor
+custom_component:
   - lambda: |-
       class WF183DESensor : public PollingComponent {
       public:
